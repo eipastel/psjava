@@ -8,10 +8,14 @@ const PRELUDE = [
   'void print(java.util.List<?> l) { System.out.println(l); }',
 ].join('\n');
 
+/** Monta o que vai pro jshell: preâmbulo + código do usuário (só tira o BOM do Windows). */
+export function buildSession(source: string): string {
+  return `${PRELUDE}\n${source.replace(/^﻿/, '')}`; // ponytail: BOM é lixo de encoding, não é edição do código
+}
+
 export async function runSource(source: string): Promise<number> {
   const jshell = await resolveJshell(); // erro amigável se faltar JDK
-  const clean = source.replace(/^﻿/, ''); // ponytail: só tira o BOM do Windows; o resto é Java puro, sem edição
-  const code = `${PRELUDE}\n${clean}`;
+  const code = buildSession(source);
   return new Promise((resolve) => {
     // -s: modo script silencioso (sem banner/prompt); lê de stdin e sai sozinho
     const p = spawn(jshell, ['-s', '-'], { stdio: ['pipe', 'inherit', 'inherit'] });
