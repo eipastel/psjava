@@ -40,7 +40,7 @@ abrir o PR de release com a CI verde (unit + e2e).
 - [x] Derivar a versão exibida pelo CLI do `package.json` (remover o `0.1.0`
   hardcoded em `src/cli.ts`) e cobrir com unit test que casa as duas versões.
 - [x] Bump `package.json`: `0.0.1-beta.3` → `0.1.0`.
-- [ ] README: trocar badge (`/beta` → `/latest`) e instalação (`@beta` → sem
+- [x] README: trocar badge (`/beta` → `/latest`) e instalação (`@beta` → sem
   sufixo) para o canal estável.
 - [ ] Varredura final de lixo e rodar `npm run test:unit` + `npm run test:e2e`
   verdes localmente.
