@@ -14,7 +14,7 @@ on:
         default: ''
 
 permissions:
-  contents: read
+  contents: write # cria o GitHub Release a partir da tag
 
 concurrency:
   group: release
@@ -68,3 +68,17 @@ jobs:
         run: npm publish --tag ${{ steps.tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Cria o GitHub Release a partir da tag, com notas geradas dos commits.
+      # Pré-release (versão com "-") entra marcado como pre-release, sem virar "Latest".
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" == *-* ]]; then PRE=--prerelease; else PRE=--latest; fi
+          gh release create "${{ github.ref_name }}" \
+            --title "v$VERSION" \
+            --generate-notes \
+            $PRE
