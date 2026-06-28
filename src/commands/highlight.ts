@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, readdir, access } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join, dirname, basename } from 'path';
 import chalk from 'chalk';
 import {
   vscodeSettingsPath,
@@ -7,6 +7,9 @@ import {
   filetypesPath,
   mergeVscodeAssociation,
   mergeIntellijMapping,
+  vscodeHighlightState,
+  intellijHighlightState,
+  type IdeState,
 } from '../core/highlight.js';
 import { askLine } from '../core/prompt.js';
 
@@ -94,4 +97,29 @@ export async function runHighlightInstall(): Promise<void> {
     for (const f of intellij) console.log(chalk.green(`✓ IntelliJ: ${f}`));
   }
   console.log(chalk.dim('Reabra o editor para o realce valer.'));
+}
+
+function printState(label: string, state: IdeState): void {
+  if (state === 'configured') console.log(chalk.green(`✓ ${label}: realce configurado`));
+  else if (state === 'missing')
+    console.log(chalk.yellow(`⚠ ${label}: realce ausente (rode: psjava highlight install)`));
+  else console.log(chalk.dim(`– ${label}: não encontrado`));
+}
+
+/** Reporta o estado do realce por IDE. Apenas informa — nunca mexe no exit code. */
+export async function reportHighlightStatus(): Promise<void> {
+  const userDir = await findVscodeUserDir();
+  printState(
+    'VSCode',
+    userDir ? vscodeHighlightState(await readOrNull(join(userDir, 'settings.json'))) : 'ide-not-found',
+  );
+
+  const dirs = await findIntellijDirs();
+  if (dirs.length === 0) {
+    printState('IntelliJ', 'ide-not-found');
+  } else {
+    for (const dir of dirs) {
+      printState(`IntelliJ (${basename(dir)})`, intellijHighlightState(await readOrNull(filetypesPath(dir))));
+    }
+  }
 }
