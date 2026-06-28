@@ -42,5 +42,5 @@ abrir o PR de release com a CI verde (unit + e2e).
 - [x] Bump `package.json`: `0.0.1-beta.3` → `0.1.0`.
 - [x] README: trocar badge (`/beta` → `/latest`) e instalação (`@beta` → sem
   sufixo) para o canal estável.
-- [ ] Varredura final de lixo e rodar `npm run test:unit` + `npm run test:e2e`
+- [x] Varredura final de lixo e rodar `npm run test:unit` + `npm run test:e2e`
   verdes localmente.
