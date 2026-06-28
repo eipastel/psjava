@@ -14,6 +14,12 @@ describe('buildProgram', () => {
     expect(names).toContain('doctor');
   });
 
+  it('expõe highlight install', () => {
+    const highlight = buildProgram().commands.find((c) => c.name() === 'highlight');
+    expect(highlight).toBeDefined();
+    expect(highlight!.commands.map((c) => c.name())).toContain('install');
+  });
+
   it('expõe a versão do package.json', () => {
     expect(buildProgram().version()).toBe(pkg.version);
   });
