@@ -41,6 +41,6 @@ na hora. O `psjava doctor` passa a reportar, por IDE, se a associação existe.
 - [x] VSCode: merge de `files.associations` em settings.json (idempotente) + unit
 - [x] IntelliJ: merge de `*.psjava→JAVA` em filetypes.xml (idempotente) + unit
 - [x] Prompt CLI para informar o caminho quando a pasta de config não é achada
-- [ ] Comando `highlight install` no commander e registro no `cli.ts`
+- [x] Comando `highlight install` no commander e registro no `cli.ts`
 - [ ] `doctor` reporta o estado do realce por IDE (aviso, mantém exit 0)
 - [ ] e2e do subcomando + atualizar README/docs
