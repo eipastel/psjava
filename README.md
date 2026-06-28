@@ -4,6 +4,7 @@ Roda arquivos `.psjava` como script — Java puro, em cima do [JShell](https://d
 
 ```bash
 psjava exemplo.psjava # executa o arquivo
+psjava exemplo.psjava --debug  # idem, e loga o tempo da execução ao final
 psjava doctor         # verifica se o jshell está disponível
 ```
 

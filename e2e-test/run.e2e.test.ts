@@ -52,6 +52,16 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     expect(res.stdout).toContain('2');
   });
 
+  it('--debug imprime o tempo da execução no stderr', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'psjava-'));
+    const file = join(dir, 'ola.psjava');
+    writeFileSync(file, JAVA);
+    const res = spawnSync('node', [CLI, file, '--debug'], { encoding: 'utf8' });
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('olá, mundo'); // saída do programa fica limpa no stdout
+    expect(res.stderr).toMatch(/\[psjava\] concluído em \d+\.\d+s/); // métrica vai pro stderr
+  });
+
   it('doctor confirma o jshell e sai com 0', () => {
     const res = spawnSync('node', [CLI, 'doctor'], { encoding: 'utf8' });
     expect(res.status).toBe(0);

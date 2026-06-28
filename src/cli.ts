@@ -8,9 +8,10 @@ export function buildProgram(): Command {
 
   program
     .argument('[file]', 'arquivo .psjava')
-    .action(async (file?: string) => {
+    .option('-d, --debug', 'imprime o tempo da execução ao final')
+    .action(async (file: string | undefined, opts: { debug?: boolean }) => {
       if (!file) return program.help();
-      await runFile(file);
+      await runFile(file, opts.debug);
     });
 
   program.command('doctor').description('Verifica o JDK (jshell)').action(runDoctor);
