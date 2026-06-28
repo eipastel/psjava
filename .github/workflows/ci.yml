@@ -15,15 +15,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
+  # Lógica pura (buildSession, resolução de arquivo, CLI). Rápido, não precisa de JDK.
+  unit:
+    name: Unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
 
@@ -33,7 +29,30 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # e2e roda o binário no jshell real — precisa de um JDK (11+) no PATH.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm run test:unit
+
+  # Comportamento ponta a ponta: roda o binário contra o jshell real. Precisa de JDK.
+  e2e:
+    name: E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
       - name: Setup JDK
         uses: actions/setup-java@v5
         with:
@@ -43,6 +62,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # npm test = unit + e2e (o e2e buila e roda no jshell). Regra de entrega do CLAUDE.md.
-      - name: Run tests
-        run: npm test
+      # test:e2e já builda o dist antes de rodar (prebuild limpa + tsc).
+      - name: E2E tests
+        run: npm run test:e2e
