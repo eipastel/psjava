@@ -81,4 +81,12 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('olá, mundo');
   });
+
+  it('recusa rodar um arquivo .java mesmo que exista', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'psjava-'));
+    writeFileSync(join(dir, 'ola.java'), JAVA);
+    const res = spawnSync('node', [CLI, join(dir, 'ola.java')], { encoding: 'utf8' });
+    expect(res.status).not.toBe(0);
+    expect(res.stderr).toContain('só roda arquivos .psjava');
+  });
 });

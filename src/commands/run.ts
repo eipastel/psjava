@@ -2,15 +2,19 @@ import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { runSource } from '../core/runner.js';
 
-/** Nomes a tentar, pra não exigir a extensão exata: `exemplo`, `exemplo.java` → `exemplo.psjava`. */
+/** Nomes a tentar. Só roda .psjava; sem extensão, assume .psjava. Outra extensão é recusada. */
 export function scriptCandidates(file: string): string[] {
   if (file.endsWith('.psjava')) return [file];
-  if (file.endsWith('.java')) return [file, `${file.slice(0, -'.java'.length)}.psjava`];
-  return [file, `${file}.psjava`];
+  const base = file.split(/[/\\]/).pop() ?? file;
+  if (base.includes('.')) return []; // tem outra extensão (.java etc) → psjava não roda
+  return [`${file}.psjava`]; // sem extensão → .psjava implícito
 }
 
 export async function runFile(file: string, debug = false): Promise<void> {
   const tried = scriptCandidates(file);
+  if (tried.length === 0) {
+    throw new Error(`psjava só roda arquivos .psjava (recebi: ${file})`);
+  }
   const found = tried.find((f) => existsSync(f));
   if (!found) {
     throw new Error(`não encontrei o arquivo. Tentei: ${tried.join(', ')}`);
