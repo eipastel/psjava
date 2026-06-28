@@ -51,3 +51,43 @@ export function mergeVscodeAssociation(settings: string | null): string {
   assoc['*.psjava'] = 'java';
   return JSON.stringify(obj, null, 2) + '\n';
 }
+
+const INTELLIJ_MAPPING = '<mapping pattern="*.psjava" type="JAVA" />';
+
+const FRESH_FILETYPES = `<application>
+  <component name="FileTypeManager" version="18">
+    <extensionMap>
+      ${INTELLIJ_MAPPING}
+    </extensionMap>
+  </component>
+</application>
+`;
+
+/**
+ * Garante o mapping `*.psjava → JAVA` no filetypes.xml, preservando o resto.
+ * Idempotente. Cria um arquivo novo se não existir; insere no `<extensionMap>` se já houver.
+ * Lança em XML de formato inesperado, pra não corromper — aí o usuário adiciona à mão.
+ */
+export function mergeIntellijMapping(filetypes: string | null): string {
+  if (!filetypes?.trim()) return FRESH_FILETYPES;
+  if (intellijHighlightState(filetypes) === 'configured') return filetypes; // idempotente
+  if (filetypes.includes('<extensionMap>')) {
+    return filetypes.replace('<extensionMap>', `<extensionMap>\n      ${INTELLIJ_MAPPING}`);
+  }
+  if (filetypes.includes('<extensionMap/>')) {
+    return filetypes.replace(
+      '<extensionMap/>',
+      `<extensionMap>\n      ${INTELLIJ_MAPPING}\n    </extensionMap>`,
+    );
+  }
+  if (filetypes.includes('</component>')) {
+    return filetypes.replace(
+      '</component>',
+      `  <extensionMap>\n      ${INTELLIJ_MAPPING}\n    </extensionMap>\n  </component>`,
+    );
+  }
+  throw new Error(
+    'filetypes.xml do IntelliJ tem formato inesperado. Adicione à mão dentro de <extensionMap>:\n  ' +
+      INTELLIJ_MAPPING,
+  );
+}

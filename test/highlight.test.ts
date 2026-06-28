@@ -7,6 +7,7 @@ import {
   vscodeHighlightState,
   intellijHighlightState,
   mergeVscodeAssociation,
+  mergeIntellijMapping,
 } from '../src/core/highlight.js';
 
 describe('paths de config (Windows)', () => {
@@ -73,5 +74,30 @@ describe('mergeVscodeAssociation', () => {
 
   it('lança em JSON inválido em vez de corromper o arquivo', () => {
     expect(() => mergeVscodeAssociation('{ // comentário\n }')).toThrow();
+  });
+});
+
+describe('mergeIntellijMapping', () => {
+  it('cria um filetypes.xml novo quando não existe', () => {
+    expect(intellijHighlightState(mergeIntellijMapping(null))).toBe('configured');
+  });
+
+  it('insere no <extensionMap> existente preservando outros mappings', () => {
+    const xml =
+      '<application><component name="FileTypeManager"><extensionMap>' +
+      '<mapping pattern="*.foo" type="BAR" /></extensionMap></component></application>';
+    const out = mergeIntellijMapping(xml);
+    expect(intellijHighlightState(out)).toBe('configured');
+    expect(out).toContain('*.foo');
+  });
+
+  it('cria o <extensionMap> quando o component não tem um', () => {
+    const xml = '<application><component name="FileTypeManager"></component></application>';
+    expect(intellijHighlightState(mergeIntellijMapping(xml))).toBe('configured');
+  });
+
+  it('é idempotente', () => {
+    const once = mergeIntellijMapping(null);
+    expect(mergeIntellijMapping(once)).toBe(once);
   });
 });
