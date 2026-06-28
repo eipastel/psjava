@@ -1,0 +1,15 @@
+# PSCode ↔ GitHub Projects binding — written by `pscode init`.
+# The agent reads this during the guided flow to sync Issues and the board.
+repo: eipastel/psjava
+owner: eipastel
+ownerType: user
+project: 7
+projectNodeId: PVT_kwHOBYRahc4Bb5hO
+statusFieldId: PVTSSF_lAHOBYRahc4Bb5hOzhWmcJI
+gh: gh
+issuePattern: issue
+links: {}
+statuses:
+  proposed: f75ad846
+  in_progress: 47fc9ee4
+  done: "98236657"
