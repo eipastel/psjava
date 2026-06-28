@@ -71,6 +71,14 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
   it('falha com erro amigável quando o arquivo não existe', () => {
     const res = spawnSync('node', [CLI, 'naoexiste.psjava'], { encoding: 'utf8' });
     expect(res.status).not.toBe(0);
-    expect(res.stderr).toContain('não consegui ler o arquivo');
+    expect(res.stderr).toContain('não encontrei o arquivo');
+  });
+
+  it('resolve o arquivo sem a extensão (.psjava implícito)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'psjava-'));
+    writeFileSync(join(dir, 'ola.psjava'), JAVA);
+    const res = spawnSync('node', [CLI, join(dir, 'ola')], { encoding: 'utf8' }); // sem extensão
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('olá, mundo');
   });
 });
