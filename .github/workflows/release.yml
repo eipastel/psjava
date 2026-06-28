@@ -1,20 +1,23 @@
 name: Release
 
-# Publica no npm quando uma tag "v*" é enviada (ex: v0.0.1-beta.0), ou manualmente.
-# Usa NPM_TOKEN (token de automação) — não pede OTP. A dist-tag é escolhida sozinha:
-# versão com "-" (ex: 0.0.1-beta.0) vai pra tag do pré-release (beta); estável vai pra latest.
+# Dispara quando um PR é fechado no master. Só publica de fato se o PR foi
+# MERGEADO e tinha a label "release" — mergeou com a label, libera a versão que
+# está no package.json. Sem tag manual: o próprio workflow cria a tag v<versão>.
+#
+# Usa pull_request_target (e não pull_request) para que os secrets (NPM_TOKEN)
+# fiquem disponíveis mesmo em PRs de forks. É seguro porque o checkout abaixo é
+# sempre de "master" (código confiável já mergeado), nunca do head do PR, e o job
+# só roda após o merge (merged == true).
+#
+# workflow_dispatch permite disparar a release manualmente quando necessário.
 on:
-  push:
-    tags: ['v*']
+  pull_request_target:
+    types: [closed]
+    branches: [master]
   workflow_dispatch:
-    inputs:
-      dist_tag:
-        description: 'Força a dist-tag (ex: latest). Vazio = decide pela versão.'
-        required: false
-        default: ''
 
 permissions:
-  contents: write # cria o GitHub Release a partir da tag
+  contents: write # cria a tag e o GitHub Release
 
 concurrency:
   group: release
@@ -22,11 +25,19 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'eipastel/psjava'
+    if: >
+      github.repository == 'eipastel/psjava' && (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event.pull_request.merged == true &&
+         contains(github.event.pull_request.labels.*.name, 'release'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -47,16 +58,28 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Pré-release (versão com "-") publica sob a sua própria dist-tag (beta), nunca como latest.
-      - name: Resolve dist-tag
-        id: tag
-        env:
-          FORCE_TAG: ${{ inputs.dist_tag }}
+      - name: Read version
+        id: v
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      # Idempotência: se a tag v<versão> já existe, a versão já foi liberada — encerra.
+      - name: Gate on tag
+        id: gate
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          if [[ -n "$FORCE_TAG" ]]; then
-            TAG="$FORCE_TAG"
-          elif [[ "$VERSION" == *-* ]]; then
+          if git rev-parse "v${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "v${{ steps.v.outputs.version }} já existe — nada a publicar."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pré-release (versão com "-") publica sob a própria dist-tag (ex: beta); estável vai pra latest.
+      - name: Resolve dist-tag
+        if: steps.gate.outputs.release == 'true'
+        id: tag
+        run: |
+          VERSION=${{ steps.v.outputs.version }}
+          if [[ "$VERSION" == *-* ]]; then
             TAG=$(echo "$VERSION" | sed -E 's/^[0-9.]+-([a-zA-Z]+).*/\1/')
           else
             TAG=latest
@@ -65,20 +88,22 @@ jobs:
           echo "Publicando $VERSION com dist-tag: $TAG"
 
       - name: Publish to npm
+        if: steps.gate.outputs.release == 'true'
         run: npm publish --tag ${{ steps.tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Cria o GitHub Release a partir da tag, com notas geradas dos commits.
-      # Pré-release (versão com "-") entra marcado como pre-release, sem virar "Latest".
-      - name: Create GitHub Release
-        if: github.ref_type == 'tag'
+      # Cria a tag v<versão> e o GitHub Release (notas geradas dos commits).
+      # Pré-release entra marcado como pre-release, sem virar "Latest".
+      - name: Tag and GitHub Release
+        if: steps.gate.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=${{ steps.v.outputs.version }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "v$VERSION"
+          git push origin "v$VERSION"
           if [[ "$VERSION" == *-* ]]; then PRE=--prerelease; else PRE=--latest; fi
-          gh release create "${{ github.ref_name }}" \
-            --title "v$VERSION" \
-            --generate-notes \
-            $PRE
+          gh release create "v$VERSION" --title "v$VERSION" --generate-notes $PRE
