@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync, spawnSync } from 'child_process';
-import { mkdtempSync, writeFileSync, existsSync } from 'fs';
+import { mkdtempSync, writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -88,5 +88,36 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     const res = spawnSync('node', [CLI, join(dir, 'ola.java')], { encoding: 'utf8' });
     expect(res.status).not.toBe(0);
     expect(res.stderr).toContain('only runs .psjava files');
+  });
+
+  // APPDATA temporário com as pastas pré-criadas → install roda sem prompt e não toca a config real.
+  function fakeAppData() {
+    const appData = mkdtempSync(join(tmpdir(), 'psjava-appdata-'));
+    mkdirSync(join(appData, 'Code', 'User'), { recursive: true });
+    mkdirSync(join(appData, 'JetBrains', 'IntelliJIdea2024.1'), { recursive: true });
+    return appData;
+  }
+
+  it('highlight install associa *.psjava ao Java no VSCode e IntelliJ', () => {
+    const appData = fakeAppData();
+    const env = { ...process.env, APPDATA: appData };
+    const res = spawnSync('node', [CLI, 'highlight', 'install'], { encoding: 'utf8', env });
+    expect(res.status).toBe(0);
+    expect(readFileSync(join(appData, 'Code', 'User', 'settings.json'), 'utf8')).toContain(
+      '"*.psjava": "java"',
+    );
+    expect(
+      readFileSync(join(appData, 'JetBrains', 'IntelliJIdea2024.1', 'options', 'filetypes.xml'), 'utf8'),
+    ).toContain('pattern="*.psjava"');
+  });
+
+  it('doctor reporta o realce configurado depois do install (e sai com 0)', () => {
+    const appData = fakeAppData();
+    const env = { ...process.env, APPDATA: appData };
+    spawnSync('node', [CLI, 'highlight', 'install'], { encoding: 'utf8', env });
+    const res = spawnSync('node', [CLI, 'doctor'], { encoding: 'utf8', env });
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('VSCode');
+    expect(res.stdout).toMatch(/realce configurado/);
   });
 });

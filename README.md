@@ -21,7 +21,8 @@ Requires a **JDK 11+** with `jshell` on your `PATH`. Verify your setup with `psj
 ```bash
 psjava example.psjava           # run the file
 psjava example.psjava --debug   # run, and print the elapsed time at the end
-psjava doctor                   # check that jshell is available
+psjava doctor                   # check jshell and the editor syntax highlighting
+psjava highlight install        # enable .psjava syntax highlighting in your editors
 ```
 
 A `.psjava` file is just Java:
@@ -42,6 +43,15 @@ print(java.util.List.of("a", "b"));  // [a, b]
 ```
 
 `System.out.println(...)` keeps working as usual.
+
+## Syntax highlighting
+
+Since a `.psjava` file is plain Java, `psjava highlight install` just tells your editor to treat `*.psjava` as Java — no extension or plugin to maintain:
+
+- **VSCode** — adds `"*.psjava": "java"` to your user `settings.json`.
+- **IntelliJ** — maps `*.psjava` to the Java file type in `filetypes.xml`.
+
+It detects each editor's config folder automatically (Windows) and asks for the path when it can't find one. Reopen the editor afterwards for the highlighting to kick in. `psjava doctor` reports, per editor, whether the highlighting is already set up.
 
 ## How it works
 
