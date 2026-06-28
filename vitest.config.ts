@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// Só e2e: o psjava não transforma nada, então o teste de verdade é rodar o binário no jshell.
+// Unit: lógica pura (montagem da sessão). Roda em qualquer lugar, sem JDK nem build.
 export default defineConfig({
-  test: { include: ['e2e-test/**/*.e2e.test.ts'], testTimeout: 30000 },
+  test: { include: ['test/**/*.test.ts'] },
 });
