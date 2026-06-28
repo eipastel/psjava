@@ -40,7 +40,7 @@ na hora. O `psjava doctor` passa a reportar, por IDE, se a associação existe.
 - [x] Núcleo `highlight.ts`: paths de config no Windows + função pura que decide o estado por IDE
 - [x] VSCode: merge de `files.associations` em settings.json (idempotente) + unit
 - [x] IntelliJ: merge de `*.psjava→JAVA` em filetypes.xml (idempotente) + unit
-- [ ] Prompt CLI para informar o caminho quando a pasta de config não é achada
+- [x] Prompt CLI para informar o caminho quando a pasta de config não é achada
 - [ ] Comando `highlight install` no commander e registro no `cli.ts`
 - [ ] `doctor` reporta o estado do realce por IDE (aviso, mantém exit 0)
 - [ ] e2e do subcomando + atualizar README/docs
