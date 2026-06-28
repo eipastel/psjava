@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 
 const CLI = join(__dirname, '..', 'bin', 'psjava.js');
-const JAVA = 'var nome = "mundo";\nSystem.out.println("olá, " + nome);\n';
+const JAVA = 'var nome = "mundo";\nprint("olá, " + nome);\n';
 
 // Pula tudo se faltar JDK ou se o dist não foi buildado — e2e não roda no vazio.
 const hasJshell = (() => {
@@ -30,6 +30,14 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     const res = run(JAVA);
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('olá, mundo');
+  });
+
+  it('print tem overload para string, int[] e List', () => {
+    const res = run('print("oi");\nprint(new int[]{1, 2, 3});\nprint(java.util.List.of("a", "b"));\n');
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('oi');
+    expect(res.stdout).toContain('[1, 2, 3]');
+    expect(res.stdout).toContain('[a, b]');
   });
 
   it('aguenta arquivo com BOM do Windows', () => {

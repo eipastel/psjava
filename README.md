@@ -9,8 +9,21 @@ psjava doctor         # verifica se o jshell está disponível
 
 ```java
 var nome = "mundo";
-System.out.println("olá, " + nome);
+print("olá, " + nome);
 ```
+
+## Helper `print`
+
+O psjava define um `print(...)` na sessão antes do teu código (Java puro, teu
+arquivo continua intocado). Tem overload para `String`, `int[]` e `List`:
+
+```java
+print("texto");                      // texto
+print(new int[]{1, 2, 3});           // [1, 2, 3]
+print(java.util.List.of("a", "b"));  // [a, b]
+```
+
+`System.out.println(...)` continua funcionando normalmente.
 
 ## Requisitos
 
