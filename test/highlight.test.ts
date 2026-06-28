@@ -6,6 +6,7 @@ import {
   filetypesPath,
   vscodeHighlightState,
   intellijHighlightState,
+  mergeVscodeAssociation,
 } from '../src/core/highlight.js';
 
 describe('paths de config (Windows)', () => {
@@ -45,5 +46,32 @@ describe('intellijHighlightState', () => {
   });
   it('sem o mapping = missing', () => {
     expect(intellijHighlightState('<filetypes></filetypes>')).toBe('missing');
+  });
+});
+
+describe('mergeVscodeAssociation', () => {
+  it('cria a associação quando não há settings (null/vazio)', () => {
+    const out = mergeVscodeAssociation(null);
+    expect(vscodeHighlightState(out)).toBe('configured');
+    expect(JSON.parse(out)['files.associations']['*.psjava']).toBe('java');
+  });
+
+  it('preserva settings e associações existentes', () => {
+    const out = mergeVscodeAssociation(
+      '{ "editor.fontSize": 14, "files.associations": { "*.foo": "bar" } }',
+    );
+    const obj = JSON.parse(out);
+    expect(obj['editor.fontSize']).toBe(14);
+    expect(obj['files.associations']['*.foo']).toBe('bar');
+    expect(obj['files.associations']['*.psjava']).toBe('java');
+  });
+
+  it('é idempotente (já configurado → continua configurado)', () => {
+    const once = mergeVscodeAssociation('{}');
+    expect(mergeVscodeAssociation(once)).toBe(once);
+  });
+
+  it('lança em JSON inválido em vez de corromper o arquivo', () => {
+    expect(() => mergeVscodeAssociation('{ // comentário\n }')).toThrow();
   });
 });

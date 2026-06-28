@@ -30,3 +30,24 @@ export function intellijHighlightState(filetypes: string | null): IdeState {
   if (filetypes === null) return 'ide-not-found';
   return /pattern="\*\.psjava"\s+type="JAVA"/.test(filetypes) ? 'configured' : 'missing';
 }
+
+/**
+ * Garante `"*.psjava": "java"` em `files.associations`, preservando o resto do settings.
+ * Idempotente. Lança se o settings.json não for JSON parseável (ex.: tem comentários),
+ * pra nunca corromper o arquivo — nesse caso o usuário adiciona a linha à mão.
+ */
+export function mergeVscodeAssociation(settings: string | null): string {
+  const text = settings?.trim() ? settings : '{}';
+  let obj: Record<string, unknown>;
+  try {
+    obj = JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new Error(
+      'settings.json do VSCode não é JSON válido (comentários?). Adicione à mão:\n' +
+        '  "files.associations": { "*.psjava": "java" }',
+    );
+  }
+  const assoc = (obj['files.associations'] ??= {}) as Record<string, string>;
+  assoc['*.psjava'] = 'java';
+  return JSON.stringify(obj, null, 2) + '\n';
+}
