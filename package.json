@@ -1,0 +1,25 @@
+{
+  "name": "@thiagodiogo/psjava",
+  "version": "0.1.0",
+  "description": "Roda arquivos .psjava como script — Java sem cerimônia, em cima do JShell.",
+  "type": "module",
+  "bin": { "psjava": "bin/psjava.js" },
+  "files": ["dist", "bin"],
+  "engines": { "node": ">=20" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "chalk": "^5.5.0",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5.9",
+    "vitest": "^3"
+  }
+}
