@@ -1,0 +1,61 @@
+name: Release
+
+# Publica no npm quando uma tag "v*" é enviada (ex: v0.0.1-beta.0), ou manualmente.
+# Usa NPM_TOKEN (token de automação) — não pede OTP. A dist-tag é escolhida sozinha:
+# versão com "-" (ex: 0.0.1-beta.0) vai pra tag do pré-release (beta); estável vai pra latest.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'eipastel/psjava'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      # Pré-release (versão com "-") publica sob a sua própria dist-tag (beta), nunca como latest.
+      - name: Resolve dist-tag
+        id: tag
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" == *-* ]]; then
+            TAG=$(echo "$VERSION" | sed -E 's/^[0-9.]+-([a-zA-Z]+).*/\1/')
+          else
+            TAG=latest
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Publicando $VERSION com dist-tag: $TAG"
+
+      - name: Publish to npm
+        run: npm publish --tag ${{ steps.tag.outputs.tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

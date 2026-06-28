@@ -1,13 +1,40 @@
 {
   "name": "@thiagodiogo/psjava",
-  "version": "0.1.0",
+  "version": "0.0.1-beta.0",
   "description": "Roda arquivos .psjava como script — Java sem cerimônia, em cima do JShell.",
+  "keywords": [
+    "psjava",
+    "java",
+    "jshell",
+    "cli",
+    "script"
+  ],
+  "homepage": "https://github.com/eipastel/psjava",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eipastel/psjava.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eipastel/psjava/issues"
+  },
+  "license": "MIT",
+  "author": "thiagodiogo",
   "type": "module",
-  "bin": { "psjava": "bin/psjava.js" },
-  "files": ["dist", "bin"],
-  "engines": { "node": ">=20" },
-  "publishConfig": { "access": "public" },
+  "bin": {
+    "psjava": "bin/psjava.js"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
+    "prebuild": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "npm run test:unit && npm run test:e2e",
