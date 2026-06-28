@@ -1,2 +1,2 @@
-﻿var nome = "mundo"
-system.out.println("olá, " + nome)
+var nome = "mundo";
+System.out.println("olá, " + nome);
