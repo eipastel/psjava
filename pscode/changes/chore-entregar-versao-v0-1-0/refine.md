@@ -44,3 +44,5 @@ abrir o PR de release com a CI verde (unit + e2e).
   sufixo) para o canal estável.
 - [x] Varredura final de lixo e rodar `npm run test:unit` + `npm run test:e2e`
   verdes localmente.
+- [x] CI: renomear os checks para `unit-test` e `e2e-test (<os>)` (mantém a
+  matriz ubuntu/windows). *(surgiu na revisão)*

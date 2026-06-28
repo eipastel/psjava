@@ -17,7 +17,7 @@ concurrency:
 jobs:
   # Lógica pura (buildSession, resolução de arquivo, CLI). Rápido, não precisa de JDK.
   unit:
-    name: Unit
+    name: unit-test
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -37,7 +37,7 @@ jobs:
 
   # Comportamento ponta a ponta: roda o binário contra o jshell real. Precisa de JDK.
   e2e:
-    name: E2E (${{ matrix.os }})
+    name: e2e-test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
