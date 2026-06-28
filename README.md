@@ -3,7 +3,7 @@
 Roda arquivos `.psjava` como script — Java puro, em cima do [JShell](https://docs.oracle.com/javase/9/jshell/). Sem transformação de sintaxe: o que está no arquivo é o que o `jshell` executa.
 
 ```bash
-psjava ola.psjava     # executa o arquivo
+psjava exemplo.psjava # executa o arquivo
 psjava doctor         # verifica se o jshell está disponível
 ```
 
@@ -33,7 +33,9 @@ Um JDK 11+ com `jshell` no PATH. Confirme com `psjava doctor`.
 
 ```bash
 npm install
-npm test          # builda e roda o e2e (precisa de JDK; pula sozinho sem ele)
+npm test          # unit + e2e
+npm run test:unit # só lógica pura (sem JDK)
+npm run test:e2e  # builda e roda no jshell (precisa de JDK; pula sozinho sem ele)
 ```
 
 A única coisa que o `psjava` mexe no arquivo é remover o BOM do Windows, que o
