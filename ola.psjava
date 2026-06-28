@@ -1,4 +1,0 @@
-var nome = "mundo";
-print("olá, " + nome);
-print(new int[]{1, 2, 3});
-print(java.util.List.of("a", "b"));
