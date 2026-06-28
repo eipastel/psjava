@@ -1,6 +1,6 @@
 # psjava
 
-[![npm](https://img.shields.io/npm/v/@thiagodiogo/psjava/beta)](https://www.npmjs.com/package/@thiagodiogo/psjava)
+[![npm](https://img.shields.io/npm/v/@thiagodiogo/psjava)](https://www.npmjs.com/package/@thiagodiogo/psjava)
 [![CI](https://github.com/eipastel/psjava/actions/workflows/ci.yml/badge.svg)](https://github.com/eipastel/psjava/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@thiagodiogo/psjava)](./LICENSE)
 
@@ -11,7 +11,7 @@ There's no custom syntax and no transpilation: whatever is in the file is exactl
 ## Install
 
 ```bash
-npm install -g @thiagodiogo/psjava@beta
+npm install -g @thiagodiogo/psjava
 ```
 
 Requires a **JDK 11+** with `jshell` on your `PATH`. Verify your setup with `psjava doctor`.

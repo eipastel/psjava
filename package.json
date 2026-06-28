@@ -1,6 +1,6 @@
 {
   "name": "@thiagodiogo/psjava",
-  "version": "0.0.1-beta.3",
+  "version": "0.1.0",
   "description": "Run .psjava files as scripts — plain Java, no ceremony, on top of JShell.",
   "keywords": [
     "psjava",
