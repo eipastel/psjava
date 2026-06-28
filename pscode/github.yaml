@@ -10,6 +10,12 @@ gh: gh
 issuePattern: issue
 links: {}
 statuses:
-  proposed: f75ad846
+  backlog: f75ad846
+  proposed: 2a632679
+  ready_to_dev: 964ec2d0
   in_progress: 47fc9ee4
+  review: "75928235"
+  in_test: 8e8d9389
+  ready_to_deploy: 542e21d1
   done: "98236657"
+  cancelled: 638bc187

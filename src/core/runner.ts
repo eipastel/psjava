@@ -25,7 +25,7 @@ export async function runSource(source: string, debug = false): Promise<number> 
     p.on('close', (c) => {
       if (debug) {
         const s = ((performance.now() - start) / 1000).toFixed(2);
-        console.error(chalk.dim(`[psjava] concluído em ${s}s`));
+        console.error(chalk.dim(`[psjava] done in ${s}s`));
       }
       resolve(c ?? 0);
     });

@@ -59,7 +59,7 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     const res = spawnSync('node', [CLI, file, '--debug'], { encoding: 'utf8' });
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('olá, mundo'); // saída do programa fica limpa no stdout
-    expect(res.stderr).toMatch(/\[psjava\] concluído em \d+\.\d+s/); // métrica vai pro stderr
+    expect(res.stderr).toMatch(/\[psjava\] done in \d+\.\d+s/); // métrica vai pro stderr
   });
 
   it('doctor confirma o jshell e sai com 0', () => {
@@ -71,7 +71,7 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
   it('falha com erro amigável quando o arquivo não existe', () => {
     const res = spawnSync('node', [CLI, 'naoexiste.psjava'], { encoding: 'utf8' });
     expect(res.status).not.toBe(0);
-    expect(res.stderr).toContain('não encontrei o arquivo');
+    expect(res.stderr).toContain('file not found');
   });
 
   it('resolve o arquivo sem a extensão (.psjava implícito)', () => {
@@ -87,6 +87,6 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     writeFileSync(join(dir, 'ola.java'), JAVA);
     const res = spawnSync('node', [CLI, join(dir, 'ola.java')], { encoding: 'utf8' });
     expect(res.status).not.toBe(0);
-    expect(res.stderr).toContain('só roda arquivos .psjava');
+    expect(res.stderr).toContain('only runs .psjava files');
   });
 });

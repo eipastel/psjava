@@ -13,11 +13,11 @@ export function scriptCandidates(file: string): string[] {
 export async function runFile(file: string, debug = false): Promise<void> {
   const tried = scriptCandidates(file);
   if (tried.length === 0) {
-    throw new Error(`psjava só roda arquivos .psjava (recebi: ${file})`);
+    throw new Error(`psjava only runs .psjava files (got: ${file})`);
   }
   const found = tried.find((f) => existsSync(f));
   if (!found) {
-    throw new Error(`não encontrei o arquivo. Tentei: ${tried.join(', ')}`);
+    throw new Error(`file not found. Tried: ${tried.join(', ')}`);
   }
   const source = await readFile(found, 'utf8');
   const code = await runSource(source, debug);
