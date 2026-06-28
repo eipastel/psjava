@@ -45,4 +45,22 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('olá, mundo');
   });
+
+  it('roda Java puro com System.out (sem edição do código)', () => {
+    const res = run('System.out.println(1 + 1);\n');
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('2');
+  });
+
+  it('doctor confirma o jshell e sai com 0', () => {
+    const res = spawnSync('node', [CLI, 'doctor'], { encoding: 'utf8' });
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('jshell');
+  });
+
+  it('falha com erro amigável quando o arquivo não existe', () => {
+    const res = spawnSync('node', [CLI, 'naoexiste.psjava'], { encoding: 'utf8' });
+    expect(res.status).not.toBe(0);
+    expect(res.stderr).toContain('não consegui ler o arquivo');
+  });
 });
