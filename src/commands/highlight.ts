@@ -11,7 +11,7 @@ import {
   intellijHighlightState,
   type IdeState,
 } from '../core/highlight.js';
-import { askLine } from '../core/prompt.js';
+import { createAsker, type Ask } from '../core/prompt.js';
 
 async function exists(p: string): Promise<boolean> {
   try {
@@ -53,10 +53,10 @@ export async function findIntellijDirs(): Promise<string[]> {
 }
 
 /** Configura o VSCode. Devolve o settings.json escrito, ou null se pulado. */
-async function installVscode(): Promise<string | null> {
+async function installVscode(ask: Ask): Promise<string | null> {
   let userDir = await findVscodeUserDir();
   if (!userDir) {
-    const ans = await askLine(
+    const ans = await ask(
       `VSCode não encontrado em ${dirname(vscodeSettingsPath())}.\n  Caminho da pasta User do VSCode (Enter pula): `,
     );
     if (!ans) return null;
@@ -68,10 +68,10 @@ async function installVscode(): Promise<string | null> {
 }
 
 /** Configura todo produto IntelliJ achado. Devolve os filetypes.xml escritos. */
-async function installIntellij(): Promise<string[]> {
+async function installIntellij(ask: Ask): Promise<string[]> {
   let dirs = await findIntellijDirs();
   if (dirs.length === 0) {
-    const ans = await askLine(
+    const ans = await ask(
       `IntelliJ não encontrado em ${jetbrainsBaseDir()}.\n  Caminho da pasta de config do IntelliJ (Enter pula): `,
     );
     if (!ans) return [];
@@ -87,16 +87,21 @@ async function installIntellij(): Promise<string[]> {
 }
 
 export async function runHighlightInstall(): Promise<void> {
-  const vscode = await installVscode();
-  console.log(vscode ? chalk.green(`✓ VSCode: ${vscode}`) : chalk.yellow('– VSCode: pulado'));
+  const { ask, close } = createAsker();
+  try {
+    const vscode = await installVscode(ask);
+    console.log(vscode ? chalk.green(`✓ VSCode: ${vscode}`) : chalk.yellow('– VSCode: pulado'));
 
-  const intellij = await installIntellij();
-  if (intellij.length === 0) {
-    console.log(chalk.yellow('– IntelliJ: pulado'));
-  } else {
-    for (const f of intellij) console.log(chalk.green(`✓ IntelliJ: ${f}`));
+    const intellij = await installIntellij(ask);
+    if (intellij.length === 0) {
+      console.log(chalk.yellow('– IntelliJ: pulado'));
+    } else {
+      for (const f of intellij) console.log(chalk.green(`✓ IntelliJ: ${f}`));
+    }
+    console.log(chalk.dim('Reabra o editor para o realce valer.'));
+  } finally {
+    close(); // libera o stdin pra o processo conseguir sair
   }
-  console.log(chalk.dim('Reabra o editor para o realce valer.'));
 }
 
 function printState(label: string, state: IdeState): void {
@@ -108,18 +113,22 @@ function printState(label: string, state: IdeState): void {
 
 /** Reporta o estado do realce por IDE. Apenas informa — nunca mexe no exit code. */
 export async function reportHighlightStatus(): Promise<void> {
+  // IDE presente sem o arquivo de config = ausente (a achar a pasta já prova que a IDE existe).
   const userDir = await findVscodeUserDir();
-  printState(
-    'VSCode',
-    userDir ? vscodeHighlightState(await readOrNull(join(userDir, 'settings.json'))) : 'ide-not-found',
-  );
+  if (!userDir) {
+    printState('VSCode', 'ide-not-found');
+  } else {
+    const settings = await readOrNull(join(userDir, 'settings.json'));
+    printState('VSCode', settings === null ? 'missing' : vscodeHighlightState(settings));
+  }
 
   const dirs = await findIntellijDirs();
   if (dirs.length === 0) {
     printState('IntelliJ', 'ide-not-found');
   } else {
     for (const dir of dirs) {
-      printState(`IntelliJ (${basename(dir)})`, intellijHighlightState(await readOrNull(filetypesPath(dir))));
+      const xml = await readOrNull(filetypesPath(dir));
+      printState(`IntelliJ (${basename(dir)})`, xml === null ? 'missing' : intellijHighlightState(xml));
     }
   }
 }

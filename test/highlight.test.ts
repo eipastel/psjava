@@ -36,6 +36,11 @@ describe('vscodeHighlightState', () => {
   it('sem a associação = missing', () => {
     expect(vscodeHighlightState('{ "editor.fontSize": 14 }')).toBe('missing');
   });
+  it('acha a associação mesmo com comentários (JSONC)', () => {
+    expect(
+      vscodeHighlightState('{\n  // meu editor\n  "files.associations": { "*.psjava": "java" }\n}'),
+    ).toBe('configured');
+  });
 });
 
 describe('intellijHighlightState', () => {
@@ -94,6 +99,15 @@ describe('mergeIntellijMapping', () => {
   it('cria o <extensionMap> quando o component não tem um', () => {
     const xml = '<application><component name="FileTypeManager"></component></application>';
     expect(intellijHighlightState(mergeIntellijMapping(xml))).toBe('configured');
+  });
+
+  it('lida com <extensionMap/> autofechado', () => {
+    const xml = '<application><component name="FileTypeManager"><extensionMap/></component></application>';
+    expect(intellijHighlightState(mergeIntellijMapping(xml))).toBe('configured');
+  });
+
+  it('lança em XML sem component nem extensionMap (não corrompe)', () => {
+    expect(() => mergeIntellijMapping('<root></root>')).toThrow();
   });
 
   it('é idempotente', () => {

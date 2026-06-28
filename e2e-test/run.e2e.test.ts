@@ -98,6 +98,9 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     return appData;
   }
 
+  // APPDATA vazio → nenhuma IDE encontrada (dispara o prompt no install, "não encontrado" no doctor).
+  const emptyAppData = () => mkdtempSync(join(tmpdir(), 'psjava-empty-'));
+
   it('highlight install associa *.psjava ao Java no VSCode e IntelliJ', () => {
     const appData = fakeAppData();
     const env = { ...process.env, APPDATA: appData };
@@ -111,6 +114,44 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     ).toContain('pattern="*.psjava"');
   });
 
+  it('highlight install é idempotente (rodar 2x mantém uma associação válida)', () => {
+    const appData = fakeAppData();
+    const env = { ...process.env, APPDATA: appData };
+    spawnSync('node', [CLI, 'highlight', 'install'], { encoding: 'utf8', env });
+    const res = spawnSync('node', [CLI, 'highlight', 'install'], { encoding: 'utf8', env });
+    expect(res.status).toBe(0);
+    const settings = readFileSync(join(appData, 'Code', 'User', 'settings.json'), 'utf8');
+    expect(JSON.parse(settings)['files.associations']['*.psjava']).toBe('java');
+    expect(settings.match(/\*\.psjava/g)?.length).toBe(1); // sem duplicar
+  });
+
+  it('highlight install pula a IDE quando não acha e o usuário dá Enter', () => {
+    const appData = emptyAppData();
+    const env = { ...process.env, APPDATA: appData };
+    const res = spawnSync('node', [CLI, 'highlight', 'install'], {
+      encoding: 'utf8',
+      env,
+      input: '\n\n', // VSCode e IntelliJ: Enter = pular
+    });
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('pulado');
+  });
+
+  it('highlight install usa o caminho informado no prompt quando não acha', () => {
+    const appData = emptyAppData();
+    const vsDir = mkdtempSync(join(tmpdir(), 'vs-'));
+    const ijDir = mkdtempSync(join(tmpdir(), 'ij-'));
+    const env = { ...process.env, APPDATA: appData };
+    const res = spawnSync('node', [CLI, 'highlight', 'install'], {
+      encoding: 'utf8',
+      env,
+      input: `${vsDir}\n${ijDir}\n`,
+    });
+    expect(res.status).toBe(0);
+    expect(readFileSync(join(vsDir, 'settings.json'), 'utf8')).toContain('"*.psjava": "java"');
+    expect(readFileSync(join(ijDir, 'options', 'filetypes.xml'), 'utf8')).toContain('pattern="*.psjava"');
+  });
+
   it('doctor reporta o realce configurado depois do install (e sai com 0)', () => {
     const appData = fakeAppData();
     const env = { ...process.env, APPDATA: appData };
@@ -119,5 +160,21 @@ describe.skipIf(!ready)('psjava e2e (jshell real)', () => {
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('VSCode');
     expect(res.stdout).toMatch(/realce configurado/);
+  });
+
+  it('doctor reporta realce ausente quando a IDE existe sem config (aviso, exit 0)', () => {
+    const appData = fakeAppData(); // pastas existem, mas sem install
+    const env = { ...process.env, APPDATA: appData };
+    const res = spawnSync('node', [CLI, 'doctor'], { encoding: 'utf8', env });
+    expect(res.status).toBe(0);
+    expect(res.stdout).toMatch(/ausente/);
+  });
+
+  it('doctor reporta não encontrado quando não há IDEs (exit 0)', () => {
+    const appData = emptyAppData();
+    const env = { ...process.env, APPDATA: appData };
+    const res = spawnSync('node', [CLI, 'doctor'], { encoding: 'utf8', env });
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('não encontrado');
   });
 });
