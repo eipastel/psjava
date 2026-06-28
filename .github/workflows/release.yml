@@ -7,6 +7,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: 'Força a dist-tag (ex: latest). Vazio = decide pela versão.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -45,9 +50,13 @@ jobs:
       # Pré-release (versão com "-") publica sob a sua própria dist-tag (beta), nunca como latest.
       - name: Resolve dist-tag
         id: tag
+        env:
+          FORCE_TAG: ${{ inputs.dist_tag }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$VERSION" == *-* ]]; then
+          if [[ -n "$FORCE_TAG" ]]; then
+            TAG="$FORCE_TAG"
+          elif [[ "$VERSION" == *-* ]]; then
             TAG=$(echo "$VERSION" | sed -E 's/^[0-9.]+-([a-zA-Z]+).*/\1/')
           else
             TAG=latest
