@@ -14,13 +14,24 @@ export function buildSession(source: string): string {
   return `${PRELUDE}\n${source.replace(/^﻿/, '')}`; // ponytail: BOM é lixo de encoding, não é edição do código
 }
 
+// Força UTF-8 na entrada e na saída do jshell — sem isso, em locale não-UTF-8 (ex: runner Linux
+// em latin1) o `á` sai como byte solto e vira "ol�". -J = VM do jshell (escreve a saída final);
+// -R = VM de execução (roda o System.out). file.encoding cobre Java 11; stdout/stderr.encoding cobre 18+.
+const UTF8_FLAGS = [
+  '-J-Dfile.encoding=UTF-8',
+  '-J-Dstdout.encoding=UTF-8',
+  '-J-Dstderr.encoding=UTF-8',
+  '-R-Dfile.encoding=UTF-8',
+  '-R-Dstdout.encoding=UTF-8',
+];
+
 export async function runSource(source: string, debug = false): Promise<number> {
   const jshell = await resolveJshell(); // erro amigável se faltar JDK
   const code = buildSession(source);
   const start = performance.now();
   return new Promise((resolve) => {
     // -s: modo script silencioso (sem banner/prompt); lê de stdin e sai sozinho
-    const p = spawn(jshell, ['-s', '-'], { stdio: ['pipe', 'inherit', 'inherit'] });
+    const p = spawn(jshell, ['-s', ...UTF8_FLAGS, '-'], { stdio: ['pipe', 'inherit', 'inherit'] });
     p.stdin.end(code + '\n');
     p.on('close', (c) => {
       if (debug) {
